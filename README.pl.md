@@ -1,38 +1,29 @@
-**Czytaj w innych językach: [rosyjski](README.md), [ukraiński](README.ua.md).**
+## GoIT Node.js Course Template Homework
 
-# GoIT Node.js Course Homework
+Wykonaj forka tego repozytorium, aby wykonywać zadania domowe (2-6). Fork utworzy repozytorium na Twoim koncie na http://github.com
 
-Praca domowa składa się z sześciu części. Na każdy tydzień kursu jest inne zadanie.
+Dodaj mentora jako collaboratora.
 
-### CLI
+Dla każdego zadania domowego utwórz nową gałąź (branch).
 
-Pierwsze zadanie domowe to napisanie aplikacji CLI (Command line interface). Należy wykonać je w oddzielnym repozytorium i oddać do sprawdzenia mentora.
+- hw02
+- hw03
+- hw04
+- hw05
+- hw06
 
-Wymagania dotyczące oddania pracy domowej:
+Każda nowa gałąź dla zadania powinna być tworzona z gałęzi master.
 
-1. Utwórz repozytorium na swoim [http://github.com](http://github.com).
-2. Po zakończeniu pierwszego zadania domowego, wykonaj push projektu.
-3. Wyślij odnośnik do projektu w celu sprawdzenia przez mentora w [schoology](https://app.schoology.com/login) lub [LMS](https://www.edu.goit.global/account/login).
+Po zakończeniu wykonania zadania domowego na swojej gałęzi, należy zrobić pull request (PR). Następnie dodaj mentora do przeglądu kodu. Dopiero po zatwierdzeniu PR przez mentora możesz scalić gałąź z zadaniem domowym do gałęzi master.
 
-### REST API
+Uważnie czytaj komentarze mentora. Popraw uwagi i zrób commit na gałęzi z zadaniem domowym. Zmiany automatycznie pojawią się w PR po wysłaniu commitu z poprawkami na GitHub. Po poprawkach ponownie dodaj mentora do przeglądu kodu.
 
-Pozostałe pięć zadań jest między sobą logicznie powiązane i reprezentują napisanie REST API. Dla wykonania zadania domowego, powinieneś wykorzystać następujący [Boilerplate](https://github.com/goitacademy/nodejs-homework-template).
+- Podczas oddawania zadania domowego podaj link do PR.
+- Kod JS jest czytelny i zrozumiały, do formatowania używany jest Prettier.
 
-Wymagania dotyczące oddania zadań domowych:
+### Komendy:
 
-1. Postępując zgodnie z instrukcjami [wideo](https://www.youtube.com/watch?v=wabSW_sz_cM), wykonaj fork projektu w swoim repozytorium. Fork nazywaj świadomie, ponieważ rekruterzy i programiści mogą w przyszłości go obejrzeć.
-2. Dodaj mentora do współpracy.
-3. Do każdej pracy domowej utwórz swoją gałąź (staraj się trzymać określonego stylu w nazwie gałęzi). Na przykład:
-   - hw02
-   - hw03
-   - hw04
-   - hw05
-   - hw06
-4. Nowa gałąź zawsze powinna odchodzić od gałęzi master.
-5. JS-код чистый и понятный, для форматирования используется `Prettier`
-Kod JS jest czysty i zrozumiały, w celu formatowania wykorzystuje się `Prettier`.
-6. Przed pushem wykonane zostało sprawdzenie jakości kodu poleceniem `npm run lint`.
-7. Oddanie oddzielnej pracy domowej to utworzenie pull requestu (PR). Sami nie zlewamy go w gałęzi master, a czekamy na sprawdzenie i zielone światło od mentora (wysyłamy odnośnik do PR w [schoology](https://app.schoology.com/login)) lub [LMS](https://www.edu.goit.global/account/login).
-8. Jeżeli będą uwagi od mentora w PR, obowiązkowo zostawiamy swoją odpowiedź, następnie naprawiamy problem (jeżeli pojawi się w czasie sprawdzania).
-9. Po poprawce w gałęzi (w której utworzono PR), robimy push kodu do tej gałęzi na zdalne repozytorium (żadnych nowych PR nie powinno się tworzyć, jak i nowych gałęzi, commit automatycznie doda się na końcu istniejącego PR).
-10. Informujemy mentora, że uwagi zostały usunięte w [schoology](https://app.schoology.com/login) lub [LMS](https://www.edu.goit.global/account/login).
+- `npm start` &mdash;  uruchamia serwer w trybie produkcyjnym
+- `npm run start:dev` &mdash; uruchamia serwer w trybie deweloperskim (development)
+- `npm run lint` &mdash; uruchamia sprawdzanie kodu z ESLint, należy wykonać przed każdym PR i poprawić wszystkie błędy lintera
+- `npm lint:fix` &mdash; to samo co powyższe, ale również automatycznie poprawia proste błędy.
