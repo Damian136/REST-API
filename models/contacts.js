@@ -1,72 +1,110 @@
-const fs = require("fs/promises");
+const mongoose = require("mongoose");
 const Joi = require("joi");
-let nanoid;
-try {
-  const nanoidModule = require("nanoid");
-  nanoid = nanoidModule.nanoid || nanoidModule;
-} catch (error) {
-  nanoid = require("nanoid");
-}
+
+const contactSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Set name for contact"],
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+  },
+  phone: {
+    type: String,
+    required: true,
+  },
+  favorite: {
+    type: Boolean,
+    default: false, // Dodaj domyślną wartość dla pola favorite
+  },
+});
+
+const Contact = mongoose.model("Contact", contactSchema);
 
 const contactsSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   phone: Joi.string().required(),
+  favorite: Joi.boolean(), // Dodaj walidację pola favorite
 });
 
-const contactsPath = "./models/contacts.json";
-
-const readContacts = async () => {
-  try {
-    const data = await fs.readFile(contactsPath, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    throw error;
-  }
-};
-
-const writeContacts = async (data) => {
-  try {
-    await fs.writeFile(contactsPath, JSON.stringify(data, null, 2));
-  } catch (error) {
-    throw error;
-  }
-};
-
 const listContacts = async () => {
-  const contacts = await readContacts();
-  return contacts;
+  try {
+    const contacts = await Contact.find().exec();
+    return contacts;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const getContactById = async (contactId) => {
-  const contacts = await readContacts();
-  const contact = contacts.find((c) => c.id === contactId);
-  return contact;
+  try {
+    const contact = await Contact.findById(contactId).exec();
+    return contact;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const removeContact = async (contactId) => {
-  const contacts = await readContacts();
-  const updatedContacts = contacts.filter((c) => c.id !== contactId);
-  await writeContacts(updatedContacts);
+  try {
+    const result = await Contact.deleteOne({ _id: contactId }).exec();
+    if (result.deletedCount === 0) {
+      throw new Error("Contact not found");
+    }
+  } catch (error) {
+    throw error;
+  }
 };
 
 const addContact = async (body) => {
-  const contacts = await readContacts();
-  const newContact = { ...body, id: nanoid() };
-  contacts.push(newContact);
-  await writeContacts(contacts);
-  return newContact;
+  try {
+    const newContact = await Contact.create(body);
+    return newContact;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const updateContact = async (contactId, body) => {
-  const contacts = await readContacts();
-  const index = contacts.findIndex((c) => c.id === contactId);
-  if (index === -1) {
-    return null; // Kontakt nie istnieje
+  try {
+    const updatedContact = await Contact.findByIdAndUpdate(
+      contactId,
+      { $set: body },
+      { new: true }
+    ).exec();
+    if (!updatedContact) {
+      throw new Error("Contact not found");
+    }
+    return updatedContact;
+  } catch (error) {
+    throw error;
   }
-  contacts[index] = { ...contacts[index], ...body };
-  await writeContacts(contacts);
-  return contacts[index];
+};
+
+const updateStatusContact = async (contactId, body) => {
+  try {
+    const existingContact = await Contact.findById(contactId).exec();
+
+    if (!existingContact) {
+      throw new Error("Contact not found");
+    }
+
+    if ("favorite" in body) {
+      if (body.favorite !== existingContact.favorite) {
+        existingContact.favorite = body.favorite;
+        await existingContact.save();
+      }
+    }
+
+    return existingContact;
+  } catch (error) {
+    throw error;
+  }
 };
 
 module.exports = {
@@ -76,4 +114,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  updateStatusContact,
 };
