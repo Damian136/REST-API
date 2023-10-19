@@ -19,7 +19,11 @@ const contactSchema = new mongoose.Schema({
   },
   favorite: {
     type: Boolean,
-    default: false, // Dodaj domyślną wartość dla pola favorite
+    default: false,
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
 });
 
@@ -29,7 +33,7 @@ const contactsSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   phone: Joi.string().required(),
-  favorite: Joi.boolean(), // Dodaj walidację pola favorite
+  favorite: Joi.boolean(),
 });
 
 const listContacts = async () => {
@@ -61,9 +65,9 @@ const removeContact = async (contactId) => {
   }
 };
 
-const addContact = async (body) => {
+const addContact = async (userId, body) => {
   try {
-    const newContact = await Contact.create(body);
+    const newContact = await Contact.create({ ...body, owner: userId });
     return newContact;
   } catch (error) {
     throw error;
@@ -86,26 +90,21 @@ const updateContact = async (contactId, body) => {
   }
 };
 
-const updateStatusContact = async (contactId, body) => {
+async function updateStatusContact(contactId, update) {
   try {
-    const existingContact = await Contact.findById(contactId).exec();
+    const updatedContact = await Contact.findByIdAndUpdate(contactId, update, {
+      new: true,
+    });
 
-    if (!existingContact) {
+    if (!updatedContact) {
       throw new Error("Contact not found");
     }
 
-    if ("favorite" in body) {
-      if (body.favorite !== existingContact.favorite) {
-        existingContact.favorite = body.favorite;
-        await existingContact.save();
-      }
-    }
-
-    return existingContact;
+    return updatedContact;
   } catch (error) {
-    throw error;
+    return null; // Zwracamy null w przypadku błędu
   }
-};
+}
 
 module.exports = {
   contactsSchema,

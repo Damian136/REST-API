@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const contactsRouter = require("./routes/api/contacts");
+const usersRouter = require("./routes/api/users");
+const checkToken = require("./middleware/checkToken");
 
 const app = express();
 
@@ -33,7 +35,9 @@ db.once("open", () => {
   console.log("Database connection successful");
 });
 
-app.use("/api/contacts", contactsRouter);
+app.use("/api/users", usersRouter);
+
+app.use("/api/contacts", checkToken, contactsRouter);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
