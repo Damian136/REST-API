@@ -5,11 +5,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
 const checkToken = require("../../middleware/checkToken");
+const emailVerificationMiddleware = require("../../middleware/emailVerificationMiddleware");
 const gravatar = require("gravatar");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const jimp = require("jimp");
+const uuid = require("uuid");
+const nodemailer = require("nodemailer");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -44,6 +47,8 @@ router.post("/signup", async (req, res, next) => {
       return res.status(409).json({ message: "Email in use" });
     }
 
+    const verificationToken = uuid.v4();
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -55,14 +60,41 @@ router.post("/signup", async (req, res, next) => {
       email,
       password: hashedPassword,
       avatarURL: avatarGravatar,
+      verificationToken,
     });
+
     await newUser.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: "Email Verification",
+      text: `Click the following link to verify your email: ${process.env.BASE_URL}/api/users/verify/${verificationToken}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Email sending failed" });
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
 
     const token = jwt.sign({ userId: newUser._id }, process.env.SECRET_KEY, {
       expiresIn: "1h",
     });
 
     res.status(201).json({
+      token,
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
@@ -73,7 +105,6 @@ router.post("/signup", async (req, res, next) => {
     next(error);
   }
 });
-
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -188,12 +219,65 @@ router.patch(
       await user.save();
 
       res.status(200).json({ avatarURL: user.avatarURL });
-      // usuwanie plików z folderu tmp
-      // fs.unlinkSync(imagePath);
     } catch (error) {
       next(error);
     }
   }
 );
+router.get("/verify/:verificationToken", async (req, res) => {
+  const verificationToken = req.params.verificationToken;
+
+  try {
+    const user = await User.findOne({ verificationToken });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.verify = true;
+    await user.save();
+    return res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.post("/verify", emailVerificationMiddleware, async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    const verificationToken = uuid.v4();
+
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+
+    const verificationLink = `${process.env.BASE_URL}/api/users/verify/${verificationToken}`;
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: user.email,
+      subject: "Email Verification",
+      html: `Click the following link to verify your email: <a href="${verificationLink}">${verificationLink}</a>`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Email sending failed" });
+      } else {
+        console.log("Email sent: " + info.response);
+        res.status(200).json({ message: "Verification email sent" });
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
